@@ -467,37 +467,36 @@ impl<C, E> AuraVerifier<C, E>
 	{
 		const MAX_TIMESTAMP_DRIFT_SECS: u64 = 60;
 
-		let inherent_res = self.client.runtime_api().check_inherents(
+		match self.client.runtime_api().check_inherents(
 			&block_id,
 			block,
 			inherent_data,
-		).map_err(|e| format!("{:?}", e))?;
+		).unwrap() {
+			Err(e) => {
+				e
+					.into_errors()
+					.try_for_each(|(i, e)| match TIError::try_from(&i, &e) {
+						Some(TIError::ValidAtTimestamp(timestamp)) => {
+							// halt import until timestamp is valid.
+							// reject when too far ahead.
+							if timestamp > timestamp_now + MAX_TIMESTAMP_DRIFT_SECS {
+								return Err("Rejecting block too far in future".into());
+							}
 
-		if !inherent_res.ok() {
-			inherent_res
-				.into_errors()
-				.try_for_each(|(i, e)| match TIError::try_from(&i, &e) {
-					Some(TIError::ValidAtTimestamp(timestamp)) => {
-						// halt import until timestamp is valid.
-						// reject when too far ahead.
-						if timestamp > timestamp_now + MAX_TIMESTAMP_DRIFT_SECS {
-							return Err("Rejecting block too far in future".into());
-						}
-
-						let diff = timestamp.saturating_sub(timestamp_now);
-						info!(
-							target: "aura",
-							"halting for block {} seconds in the future",
-							diff
-						);
-						thread::sleep(Duration::from_secs(diff));
-						Ok(())
-					},
-					Some(TIError::Other(e)) => Err(e.into()),
-					None => Err(self.inherent_data_providers.error_to_string(&i, &e)),
-				})
-		} else {
-			Ok(())
+							let diff = timestamp.saturating_sub(timestamp_now);
+							info!(
+								target: "aura",
+								"halting for block {} seconds in the future",
+								diff
+							);
+							thread::sleep(Duration::from_secs(diff));
+							Ok(())
+						},
+						Some(TIError::Other(e)) => Err(e.into()),
+						None => Err(self.inherent_data_providers.error_to_string(&i, &e)),
+					})
+			},
+			Ok(()) => Ok(()),
 		}
 	}
 }

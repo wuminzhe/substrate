@@ -271,8 +271,13 @@ impl_runtime_apis! {
 			data.create_extrinsics()
 		}
 
-		fn check_inherents(block: Block, data: InherentData) -> CheckInherentsResult {
-			data.check_extrinsics(&block)
+		fn check_inherents(block: Block, data: InherentData) -> Result<(), CheckInherentsResult> {
+			let r = data.check_extrinsics(&block);
+			if r.ok() {
+				Ok(())
+			} else {
+				Err(r)
+			}
 		}
 
 		fn random_seed() -> <Block as BlockT>::Hash {
