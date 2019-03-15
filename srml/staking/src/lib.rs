@@ -182,28 +182,17 @@
 //!     validator and their nominators is calculated by multiplying the result of the above point
 //!       by `2.pow(unstake_threshold)`. This punishment is shared in the same manner as the rewards.
 //! - If the previous overflows, then `slot_stake` is used. (NOTE: This should never happen in a correctly implemented, non-corrupted, well-configured system)
-<<<<<<< HEAD
-//! - All individual accounts' punishments are capped at their total stake. (NOTE: This cap should never comee into force in a correctly implemented, non-corrupted, well-configured system)
-//!
-=======
 //! - All individual accounts' punishments are capped at their total stake. (NOTE: This cap should never come into force in a correctly implemented, non-corrupted, well-configured system)
 //! 
->>>>>>> 1fee935c... Update srml/staking/src/lib.rs
 //! ### Additional Fund Management Operations
 //!
 //! Any funds already placed into stash can be the target of the following operations:
 //!
 //! - The controller account can free a portion (or all) of the funds using the `unbond()` call. Note that the funds
 //!   are not immediately accessible, instead, a duration denoted by `BondingDuration` (in number of eras) must pass until the funds can actually be removed.
-//! - To preparee the funds for transfer away from the stash account, then `withdraw_unbonded()` must be used once the bonding duration is over.
-//! - Additional funds that are placed in the stash account may be bonded with the `bond_extra()` transaction call.
-//!
-//! ### Election algorithm details.
-//!
 //! The current election algorithm is implemented based on Phragmén. The reference implementation can be found [here](https://github.com/w3f/consensus/tree/master/NPoS).
 //!
 //! ## GenesisConfig
-//!
 //! See the [`GensisConfig`] for a list of attributes that can be provided.
 //!
 //! ## Related Modules
