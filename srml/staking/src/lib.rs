@@ -94,11 +94,15 @@
 //! step back via the `chill()` call.
 //!
 //! ## Interface
+<<<<<<< HEAD
 //!
 //! ### Types
 //!
 //! - `Currency`: Used as the measurement means of staking and funds management.
 //!
+=======
+//! 
+>>>>>>> f9144b2b... Final fixes
 //! ### Dispatchable
 //!
 //! The Dispatchable functions of the staking module enable the steps needed for entities to accept and change their
