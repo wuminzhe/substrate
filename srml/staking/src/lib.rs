@@ -48,16 +48,16 @@
 //!
 //! #### Staking
 //!
-//! Almost any interaction with the staking module requires a process of *bonding* (also known as 
+//! Almost any interaction with the staking module requires a process of *bonding* (also known as
 //! being a **staker**). To become *bonded* a fund-holding account known as the _**stash account**_, which holds some of all of the
 //! funds that become frozen in place as part of the staking process, is paired with an active **controller** account which issues
-//! instructions on how they shall be used. This process in the public API is mostly referred to as _bonding_ via 
+//! instructions on how they shall be used. This process in the public API is mostly referred to as _bonding_ via
 //! the `bond()` function.
 //!
 //! There are three possible roles that any staked account pair can be in: `Validator`, `Nominator` and `Idle`. There are
 //! three corresponding instructions to change between roles, namely: `validate`, `nominate` and `chill`. Note that the
 //! _controller_ account is always responsible
-//! for declaring changes and the _stash_ account stays untouched, without directly interacting in any operation. 
+//! for declaring changes and the _stash_ account stays untouched, without directly interacting in any operation.
 //!
 //! #### Validating
 //!
@@ -94,15 +94,7 @@
 //! step back via the `chill()` call.
 //!
 //! ## Interface
-<<<<<<< HEAD
-//!
-//! ### Types
-//!
-//! - `Currency`: Used as the measurement means of staking and funds management.
-//!
-=======
 //! 
->>>>>>> f9144b2b... Final fixes
 //! ### Dispatchable
 //!
 //! The Dispatchable functions of the staking module enable the steps needed for entities to accept and change their
