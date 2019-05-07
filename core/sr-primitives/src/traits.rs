@@ -146,10 +146,6 @@ pub trait Convert<A, B> {
 	fn convert(a: A) -> B;
 }
 
-impl<A, B: Default> Convert<A, B> for () {
-	fn convert(_: A) -> B { Default::default() }
-}
-
 /// A structure that performs identity conversion.
 pub struct Identity;
 impl<T> Convert<T, T> for Identity {

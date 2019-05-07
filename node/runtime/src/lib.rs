@@ -135,8 +135,13 @@ impl timestamp::Trait for Runtime {
 	type OnTimestampSet = Aura;
 }
 
+pub struct UseDefault<A>(A);
+impl<A, B: Default> Convert<A, B> for UseDefault<A> {
+	fn convert(_: A) -> B { B::default() }
+}
+
 impl session::Trait for Runtime {
-	type ConvertAccountIdToSessionKey = ();
+	type ConvertAccountIdToSessionKey = UseDefault<AccountId>;
 	type OnSessionChange = (Staking, grandpa::SyncedAuthorities<Runtime>);
 	type Event = Event;
 }
