@@ -146,12 +146,6 @@ pub trait Convert<A, B> {
 	fn convert(a: A) -> B;
 }
 
-/// A structure that performs identity conversion.
-pub struct Identity;
-impl<T> Convert<T, T> for Identity {
-	fn convert(a: T) -> T { a }
-}
-
 /// Simple trait similar to `Into`, except that it can be used to convert numerics between each
 /// other.
 pub trait As<T> {
