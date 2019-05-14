@@ -1874,6 +1874,7 @@ dependencies = [
  "substrate-consensus-aura 0.1.0",
  "substrate-finality-grandpa 0.1.0",
  "substrate-inherents 0.1.0",
+ "substrate-keyring 0.1.0",
  "substrate-keystore 0.1.0",
  "substrate-network 0.1.0",
  "substrate-primitives 0.1.0",

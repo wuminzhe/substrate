@@ -58,6 +58,7 @@ pub use timestamp::Call as TimestampCall;
 pub use balances::Call as BalancesCall;
 pub use runtime_primitives::{Permill, Perbill};
 pub use support::StorageValue;
+pub use runtime_primitives::generic::Era;
 
 /// Runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {

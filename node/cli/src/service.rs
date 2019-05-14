@@ -167,41 +167,66 @@ construct_service_factory! {
 
 #[cfg(test)]
 mod tests {
-	#[cfg(feature = "rhd")]
+	#[test]
 	fn test_sync() {
-		use {service_test, Factory};
-		use client::{ImportBlock, BlockOrigin};
+		use std::sync::Arc;
+		use super::Factory;
+		use crate::chain_spec;
+		use parity_codec::{Encode, Decode};
+		use consensus::{BlockOrigin, ImportBlock, Environment, Proposer,
+			ForkChoiceStrategy, AuraConsensusData, CompatibleDigestItem};
+		use primitives::ed25519;
+		use node_primitives::{BlockId, OpaqueExtrinsic, DigestItem, Block};
+		use node_runtime::{Call, Address, BalancesCall, Era, UncheckedExtrinsic};
+		use sr_primitives::traits::{Block as BlockT, BlockNumberToHash};
+		use keyring::Keyring;
+		use substrate_service as service;
 
 		let alice: Arc<ed25519::Pair> = Arc::new(Keyring::Alice.into());
 		let bob: Arc<ed25519::Pair> = Arc::new(Keyring::Bob.into());
 		let validators = vec![alice.public().0.into(), bob.public().0.into()];
 		let keys: Vec<&ed25519::Pair> = vec![&*alice, &*bob];
-		let dummy_runtime = ::tokio::runtime::Runtime::new().unwrap();
+		let mut slot_num = 1;
 		let block_factory = |service: &<Factory as service::ServiceFactory>::FullService| {
 			let block_id = BlockId::number(service.client().info().unwrap().chain.best_number);
 			let parent_header = service.client().header(&block_id).unwrap().unwrap();
-			let consensus_net = ConsensusNetwork::new(service.network(), service.client().clone());
-			let proposer_factory = consensus::ProposerFactory {
-				client: service.client().clone(),
-				transaction_pool: service.transaction_pool().clone(),
-				network: consensus_net,
-				force_delay: 0,
-				handle: dummy_runtime.executor(),
+			let proposer_factory = Arc::new(substrate_basic_authorship::ProposerFactory {
+				client: service.client(),
+				transaction_pool: service.transaction_pool(),
+			});
+			let consensus_data = AuraConsensusData {
+				timestamp: slot_num * 2,
+				slot: slot_num,
+				slot_duration: 2,
 			};
-			let (proposer, _, _) = proposer_factory.init(&parent_header, &validators, alice.clone()).unwrap();
-			let block = proposer.propose().expect("Error making test block");
+			let proposer = <Environment<Block, AuraConsensusData, Error=_, Proposer=_>>::init(&*proposer_factory, &parent_header, &validators).unwrap();
+			let block = proposer.propose(consensus_data).expect("Error making test block");
+			let (header, body) = block.deconstruct();
+			let pre_hash = header.hash();
+			let parent_hash = header.parent_hash.clone();
+			// sign the pre-sealed hash of the block and then
+			// add it to a digest item.
+			let to_sign = (slot_num, pre_hash).encode();
+			let authority_index = (slot_num as usize) % keys.len();
+			let signature = keys[authority_index].sign(&to_sign[..]);
+			let item = <DigestItem as CompatibleDigestItem>::aura_seal(
+				slot_num,
+				signature,
+			);
+			slot_num += 1;
 			ImportBlock {
 				origin: BlockOrigin::File,
-				justification: Vec::new(),
-				internal_justification: Vec::new(),
+				justification: None,
+				post_digests: vec![item],
 				finalized: true,
-				body: Some(block.extrinsics),
-				header: block.header,
+				body: Some(body),
+				header: header,
 				auxiliary: Vec::new(),
+				fork_choice: ForkChoiceStrategy::LongestChain,
 			}
 		};
 		let extrinsic_factory = |service: &<Factory as service::ServiceFactory>::FullService| {
-			let payload = (0, Call::Balances(BalancesCall::transfer(RawAddress::Id(bob.public().0.into()), 69.into())), Era::immortal(), service.client().genesis_hash());
+			let payload = (0.into(), Call::Balances(BalancesCall::transfer(Address::Id(bob.public().0.into()), 69.into())), Era::immortal(), service.client().genesis_hash());
 			let signature = alice.sign(&payload.encode()).into();
 			let id = alice.public().0.into();
 			let xt = UncheckedExtrinsic {
@@ -211,7 +236,7 @@ mod tests {
 			let v: Vec<u8> = Decode::decode(&mut xt.as_slice()).unwrap();
 			OpaqueExtrinsic(v)
 		};
-		service_test::sync::<Factory, _, _>(chain_spec::integration_test_config(), block_factory, extrinsic_factory);
+		service_test::sync::<Factory, _, _>(chain_spec::tests::integration_test_config(), block_factory, extrinsic_factory);
 	}
 
 }

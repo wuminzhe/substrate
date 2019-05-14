@@ -23,6 +23,8 @@
 
 use runtime_primitives::generic;
 use runtime_primitives::{OpaqueExtrinsic, traits::BlakeTwo256};
+#[cfg(feature = "std")]
+use primitives::bytes;
 
 /// An index to a block.
 pub type BlockNumber = u64;
@@ -54,8 +56,10 @@ pub type Signature = runtime_primitives::Ed25519Signature;
 /// A timestamp: seconds since the unix epoch.
 pub type Timestamp = u64;
 
+/// Header digest item.
+pub type DigestItem = generic::DigestItem<Hash, SessionKey>;
 /// Header type.
-pub type Header = generic::Header<BlockNumber, BlakeTwo256, generic::DigestItem<Hash, SessionKey>>;
+pub type Header = generic::Header<BlockNumber, BlakeTwo256, DigestItem>;
 /// Block type.
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 /// Block ID.

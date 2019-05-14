@@ -29,14 +29,11 @@
 use std::{sync::Arc, time::Duration, thread};
 
 use parity_codec::Encode;
-use consensus_common::{
-	Authorities, BlockImport, Environment, Proposer, ForkChoiceStrategy
-};
+use consensus_common::Authorities;
 use consensus_common::import_queue::{Verifier, BasicQueue, SharedBlockImport, SharedJustificationImport};
 use client::ChainHead;
 use client::block_builder::api::{BlockBuilder as BlockBuilderApi, self as block_builder_api};
 use client::runtime_api::ApiExt;
-use consensus_common::{ImportBlock, BlockOrigin};
 use runtime_primitives::{generic, generic::BlockId, Justification};
 use runtime_primitives::traits::{
 	Block, Header, Digest, DigestItemFor, DigestItem, ProvideRuntimeApi
@@ -57,7 +54,7 @@ use aura_slots::{CheckedHeader, SlotWorker, SlotInfo, SlotCompatible};
 
 pub use aura_slots::SlotDuration;
 pub use aura_primitives::*;
-pub use consensus_common::SyncOracle;
+pub use consensus_common::{ImportBlock, BlockOrigin, BlockImport, SyncOracle, Environment, Proposer, ForkChoiceStrategy};
 
 /// A handle to the network. This is generally implemented by providing some
 /// handle to a gossip service or similar.
