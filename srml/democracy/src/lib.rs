@@ -1384,6 +1384,53 @@ mod tests {
 		});
 	}
 
+    #[test]
+    fn votes_in_last_block_should_count() {
+        with_externalities(&mut new_test_ext(), || {
+            System::set_block_number(0);
+            assert_ok!(propose_set_balance(1, 2, 1));
+            assert!(Democracy::referendum_info(0).is_none());
+
+            // end of 0 => next referendum scheduled.
+            fast_forward_to(1);
+            assert!(Democracy::referendum_info(0).is_some());
+
+            // last chance to vote
+            fast_forward_to(2);
+
+            let r = 0;
+            assert_ok!(Democracy::vote(Origin::signed(1), r, AYE));
+
+            assert_eq!(Democracy::referendum_count(), 1);
+            assert_eq!(
+                Democracy::referendum_info(0),
+                Some(ReferendumInfo {
+                    end: 2,
+                    proposal: set_balance_proposal(2),
+                    threshold: VoteThreshold::SuperMajorityApprove,
+                    delay: 2
+                })
+            );
+            assert_eq!(Democracy::voters_for(r), vec![1]);
+            assert_eq!(Democracy::vote_of((r, 1)), AYE);
+            assert_eq!(Democracy::tally(r), (1, 0, 1));
+
+            // referendum runs during 1 and 2, ends @ end of 2.
+            // state mutated at start of 3.
+            fast_forward_to(3);
+
+            assert!(Democracy::referendum_info(0).is_none());
+            assert_eq!(Democracy::dispatch_queue(4), vec![
+                Some((set_balance_proposal(2), 0))
+            ]);
+
+            // referendum passes and wait another two blocks for enactment.
+            fast_forward_to(5);
+
+            assert_eq!(Balances::free_balance(&42), 2);
+        });
+    }
+
 	#[test]
 	fn cancel_queued_should_work() {
 		with_externalities(&mut new_test_ext(), || {
