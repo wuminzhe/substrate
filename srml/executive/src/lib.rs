@@ -157,6 +157,7 @@ where
 {
 	/// Start the execution of a particular block.
 	pub fn initialize_block(header: &System::Header) {
+		println!("++++ Executive => Initialize block");
 		let mut digests = System::Digest::default();
 		header.digest().logs().iter().for_each(|d| if d.as_pre_runtime().is_some() { digests.push(d.clone()) });
 		Self::initialize_block_impl(header.number(), header.parent_hash(), header.extrinsics_root(), &digests);
@@ -191,6 +192,7 @@ where
 
 	/// Actually execute all transitions for `block`.
 	pub fn execute_block(block: Block) {
+		println!("+++ Executive => Execute block");
 		Self::initialize_block(block.header());
 
 		// any initial checks
@@ -206,7 +208,7 @@ where
 
 	/// Execute given extrinsics and take care of post-extrinsics book-keeping.
 	fn execute_extrinsics_with_book_keeping(extrinsics: Vec<Block::Extrinsic>, block_number: NumberFor<Block>) {
-
+		println!("++++ Executive => execute_extrinsics_with_book_keeping");
 		extrinsics.into_iter().for_each(Self::apply_extrinsic_no_note);
 
 		// post-extrinsics book-keeping
@@ -270,6 +272,7 @@ where
 			return Err(internal::ApplyError::FullBlock);
 		}
 
+		// println!("++++ [EXEC] apply extrinsic with len {} and weight {}", encoded_len, weight);
 		if let (Some(sender), Some(index)) = (xt.sender(), xt.index()) {
 			// check index
 			let expected_index = <system::Module<System>>::account_nonce(sender);
@@ -347,6 +350,9 @@ where
 			Err(primitives::BAD_SIGNATURE) => return TransactionValidity::Invalid(ApplyError::BadSignature as i8),
 			Err(_) => return TransactionValidity::Invalid(UNKNOWN_ERROR),
 		};
+
+		let weight = xt.weight(encoded_len);
+		println!("++++ [EXEC] validate transaction with len {} and weight {}", encoded_len, weight);
 
 		match (xt.sender(), xt.index()) {
 			(Some(sender), Some(index)) => {

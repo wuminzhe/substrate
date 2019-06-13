@@ -74,7 +74,7 @@ impl<B, E, RA, Block> ClientExt<Block> for Client<B, E, Block, RA>
 			auxiliary: Vec::new(),
 			fork_choice: ForkChoiceStrategy::LongestChain,
 		};
-
+		println!("+++ Client_ext import()");
 		self.import_block(import, HashMap::new()).map(|_| ())
 	}
 

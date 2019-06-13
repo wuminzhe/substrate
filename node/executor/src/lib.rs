@@ -910,6 +910,45 @@ mod tests {
 		client.import(BlockOrigin::Own, block).unwrap();
 	}
 
+	#[test]
+	fn should_fail_import_when_block_weight_is_full() {
+		use test_client::{ClientExt, TestClientBuilder, consensus::BlockOrigin};
+		let client = TestClientBuilder::default()
+		.build_with_native_executor::<Block, node_runtime::RuntimeApi, _>(executor())
+		.0;
+
+		let create_and_import = |i, h| {
+			println!("Importing block {} with hash {:?}", i, h);
+			let b = construct_block(
+				&mut new_test_ext(COMPACT_CODE, false),
+				i,
+				h,
+				vec![
+					CheckedExtrinsic {
+						signed: None,
+						function: Call::Timestamp(timestamp::Call::set(i * 10)),
+					},
+					CheckedExtrinsic {
+						signed: Some((alice(), 0)),
+						function: Call::Balances(balances::Call::transfer(bob().into(), 69)),
+					}
+				]
+			);
+
+			client.import(BlockOrigin::Own, Block::decode(&mut &b.0[..]).unwrap()).unwrap();
+			b.1
+		};
+
+		let mut pre_hash;
+		pre_hash = create_and_import(1, GENESIS_HASH.into());
+		println!("Imported #1");
+		pre_hash = create_and_import(2, pre_hash);
+		println!("Imported #2");
+		pre_hash = create_and_import(3, pre_hash);
+		println!("Imported #3");
+		// ... and on and on.
+	}
+
 	#[cfg(feature = "benchmarks")]
 	mod benches {
 		use super::*;

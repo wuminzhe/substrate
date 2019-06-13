@@ -796,14 +796,17 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 			fork_choice,
 		} = import_block;
 
+		println!("+++ Client apply_block");
 		assert!(justification.is_some() && finalized || justification.is_none());
-
+		println!("Checkpoint 1");
 		let parent_hash = header.parent_hash().clone();
+		println!("Checkpoint 2");
 
 		match self.backend.blockchain().status(BlockId::Hash(parent_hash))? {
 			blockchain::BlockStatus::InChain => {},
 			blockchain::BlockStatus::Unknown => return Ok(ImportResult::UnknownParent),
 		}
+		println!("Checkpoint 3");
 
 		let import_headers = if post_digests.is_empty() {
 			PrePostHeader::Same(header)
@@ -814,6 +817,7 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 			}
 			PrePostHeader::Different(header, post_header)
 		};
+		println!("Checkpoint 4");
 
 		let hash = import_headers.post().hash();
 		let height = (*import_headers.post().number()).saturated_into::<u64>();
@@ -857,6 +861,7 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 	) -> error::Result<ImportResult> where
 		E: CallExecutor<Block, Blake2Hasher> + Send + Sync + Clone,
 	{
+		print!("++++ Client execute_and_import_block");
 		let parent_hash = import_headers.post().parent_hash().clone();
 		match self.backend.blockchain().status(BlockId::Hash(hash))? {
 			blockchain::BlockStatus::InChain => return Ok(ImportResult::AlreadyInChain),
@@ -970,6 +975,7 @@ impl<B, E, Block, RA> Client<B, E, Block, RA> where
 						}),
 					}
 				};
+				println!("++++ Client block_execution");
 				let (_, storage_update, changes_update) = self.executor.call_at_state::<_, _, _, NeverNativeValue, fn() -> _>(
 					transaction_state,
 					&mut overlay,
@@ -1393,6 +1399,7 @@ impl<B, E, Block, RA> consensus::BlockImport<Block> for Client<B, E, Block, RA> 
 		import_block: ImportBlock<Block>,
 		new_cache: HashMap<CacheKeyId, Vec<u8>>,
 	) -> Result<ImportResult, Self::Error> {
+		println!("+++ Client import block");
 		self.lock_import_and_run(|operation| {
 			self.apply_block(operation, import_block, new_cache)
 		}).map_err(|e| ConsensusError::ClientImport(e.to_string()).into())
